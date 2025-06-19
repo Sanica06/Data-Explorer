@@ -11,8 +11,8 @@ const ApodViewer = () => {
 
   useEffect(() => {
     const url = date
-      ? `http://localhost:5000/api/apod?date=${date}`
-      : 'http://localhost:5000/api/apod';
+      ? `https://nasa-backend-5xu5.onrender.com/api/apod?date=${date}`
+      : 'https://nasa-backend-5xu5.onrender.com/api/apod';
 
     axios.get(url)
       .then((res) => {
