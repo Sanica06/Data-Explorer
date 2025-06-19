@@ -1,35 +1,40 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
+// NASA APOD Viewer Component
 const ApodViewer = () => {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [date, setDate] = useState('');
-  const [aiFact, setAiFact] = useState('');
-  const [aiLoading, setAiLoading] = useState(false);
-  
 
+  // === React State Hooks ===
+  const [data, setData] = useState(null);        // Stores NASA APOD data
+  const [loading, setLoading] = useState(true);  // Controls main data loading state
+  const [date, setDate] = useState('');          // User-selected date
+  const [aiFact, setAiFact] = useState('');      // AI-generated cosmic poem
+  const [aiLoading, setAiLoading] = useState(false);  // Controls AI thinking animation
+
+  // === Fetch NASA APOD Data on Load or Date Change ===
   useEffect(() => {
     const url = date
-    ? `${process.env.REACT_APP_BACKEND_URL}/api/apod?date=${date}`
-    : `${process.env.REACT_APP_BACKEND_URL}/api/apod`;
+  ? `${process.env.REACT_APP_BACKEND_URL}/api/apod?date=${date}`
+  : `${process.env.REACT_APP_BACKEND_URL}/api/apod`;
 
     axios.get(url)
       .then((res) => {
-        setData(res.data);
-        setLoading(false);
-        setAiFact('');
+        setData(res.data);         // Update APOD data
+        setLoading(false);         // Stop loading screen
+        setAiFact('');             // Reset AI fact when new date is chosen
       })
       .catch((err) => {
         console.error("Error fetching APOD data:", err);
         setLoading(false);
       });
-  }, [date]);
+  }, [date]); // Runs on first load + when date changes
 
+  // === AI Fact Generator using OpenRouter GPT-3.5 Turbo ===
   const generateAiFact = async () => {
-    setAiLoading(true);
-    setAiFact('');
+    setAiLoading(true);   // Start AI animation
+    setAiFact('');        // Clear previous AI fact
 
+    // Build prompt to send to GPT
     const prompt = `Generate an interesting cosmic complete poem of around 50 words of text about the following NASA image:\nTitle: "${data.title}"\nDescription: "${data.explanation}"`;
 
     try {
@@ -44,26 +49,30 @@ const ApodViewer = () => {
         },
         {
           headers: {
-            'Authorization': 'Bearer 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',
+            'Authorization': 'Bearer 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', // OpenRouter Key
             'Content-Type': 'application/json'
           }
         }
       );
 
       console.log("AI Response:", aiResponse.data);
+
+      // Update AI Fact output
       const message = aiResponse.data.choices[0]?.message?.content || "No poem generated.";
       setAiFact(message);
+
     } catch (error) {
       console.error("AI Fact error:", error);
-      setAiFact("Sorry, could not generate poem.");
+      setAiFact("No Poem Generated.");
     } finally {
-      setAiLoading(false);
+      setAiLoading(false);  // Stop AI animation
     }
   };
 
+  // === Loading Screen ===
   if (loading) return (
     <div style={{
-      backgroundColor: '#eef2ff',
+      backgroundColor: '#fef2ff',
       height: '100vh',
       display: 'flex',
       justifyContent: 'center',
@@ -75,16 +84,18 @@ const ApodViewer = () => {
     </div>
   );
 
+  // === Error Screen ===
   if (!data) return <p style={{ textAlign: 'center' }}>Something went wrong.</p>;
 
+  // === Non-image media fallback ===
   if (data.media_type !== 'image') {
     return (
       <div style={{
-        backgroundColor: '#f3efe5',
+        backgroundColor: '#fef2ff',
         minHeight: '100vh',
         padding: '4vw',
         textAlign: 'center',
-        color: '#f3efe5',
+        color: '#3f51b5'
       }}>
         <h2 style={{
           fontSize: 'clamp(1.5rem, 4vw, 2.5rem)'
@@ -96,17 +107,20 @@ const ApodViewer = () => {
     );
   }
 
+  // === Main UI Return ===
   return (
     <div style={{
-      backgroundColor: '#f3efe5',
+      backgroundColor: '#fef2ff',
       minHeight: '100vh',
       padding: '4vw',
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
       fontFamily: '"Segoe UI", "Roboto", "Helvetica Neue", sans-serif',
-      color: '#f3efe5 ',
+      color: '#333'
     }}>
+
+      {/* NASA APOD Title */}
       <h1 style={{
         color: '#3f51b5',
         marginBottom: '10px',
@@ -116,6 +130,7 @@ const ApodViewer = () => {
         {data.title}
       </h1>
 
+      {/* Date Picker */}
       <input
         type="date"
         value={date}
@@ -139,8 +154,10 @@ const ApodViewer = () => {
         }}
       />
 
+      {/* Image Date */}
       <p style={{ color: '#666', marginBottom: '20px' }}>{data.date}</p>
 
+      {/* APOD Image */}
       <img
         src={data.url}
         alt={data.title}
@@ -154,6 +171,7 @@ const ApodViewer = () => {
         }}
       />
 
+      {/* APOD Description */}
       <p style={{
         maxWidth: '700px',
         fontSize: 'clamp(1rem, 2.5vw, 1.1rem)',
@@ -167,6 +185,7 @@ const ApodViewer = () => {
           : data.explanation}
       </p>
 
+      {/* AI Button */}
       <button
         onClick={generateAiFact}
         style={{
@@ -186,6 +205,7 @@ const ApodViewer = () => {
         {aiLoading ? 'AI is thinking... 🤖✨' : 'Generate A Cool Cosmic Poem 🚀'}
       </button>
 
+      {/* AI Fact / Poem */}
       {aiFact && (
         <div style={{
           marginTop: '20px',
@@ -206,6 +226,7 @@ const ApodViewer = () => {
           <strong>AI Says: </strong>{aiFact}
         </div>
       )}
+
     </div>
   );
 };
